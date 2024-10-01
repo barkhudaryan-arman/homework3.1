@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.hogwarts.school.model.Student;
+import ru.hogwarts.school.repository.StudentRepository;
 
 import java.util.HashMap;
 import java.util.List;
@@ -13,30 +14,37 @@ import java.util.stream.Collectors;
 
 @Service
 public class StudentService {
-    private Map<Long, Student> students = new HashMap<>();
-    private Long studentId = 0L;
+    private final StudentRepository studentRepository;
+
+    public StudentService(StudentRepository studentRepository) {
+        this.studentRepository = studentRepository;
+    }
 
     public Student createStudent(Student student) {
-        students.put(studentId, student);
-        studentId++;
-        return student;
+        return studentRepository.save(student);
     }
 
     public Student getStudentById(Long studentId) {
-        return students.get(studentId);
+        return studentRepository.findById(studentId)
+                .orElse(null);
     }
 
     public Student uptadeStudent(Long studentId, Student student) {
-        students.put(studentId, student);
-        return student;
+        if (studentRepository.existsById(studentId)){
+            student.setId(studentId);
+            return studentRepository.save(student);
+        }
+        return null;
     }
 
     public Student deleteStudent(Long studentId) {
-        return students.remove(studentId);
+        Student student = getStudentById(studentId);
+        if (student != null){
+            studentRepository.deleteById(studentId);
+        }
+        return student;
     }
     public List<Student> getStudentsByAge(int age) {
-        return students.values().stream()
-                .filter(student -> student.getAge() == age)
-                .collect(Collectors.toList());
+        return studentRepository.findByAge(age);
     }
 }
