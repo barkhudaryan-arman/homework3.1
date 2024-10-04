@@ -9,6 +9,7 @@ import ru.hogwarts.school.model.Student;
 import ru.hogwarts.school.repository.StudentRepository;
 import ru.hogwarts.school.service.StudentService;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -80,13 +81,39 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGetStudentsByAge() {
-        when(studentRepository.findByAge(15)).thenReturn(List.of(student));
+    public void testGetStudentsByAgeRange() {
+        // Arrange
+        List<Student> mockStudents = Arrays.asList(
+                new Student(1L, "John", 20),
+                new Student(2L, "Alice", 22)
+        );
+        when(studentRepository.findByAgeBetween(18, 25)).thenReturn(mockStudents);
 
-        List<Student> studentsByAge = studentService.getStudentsByAge(15);
+        // Act
+        List<Student> students = studentService.getStudentsByAgeRange(18, 25);
 
-        assertEquals(1, studentsByAge.size());
-        assertEquals(student.getName(), studentsByAge.get(0).getName());
-        verify(studentRepository, times(1)).findByAge(15);
+        // Assert
+        assertNotNull(students);
+        assertEquals(2, students.size());
+        assertEquals("John", students.get(0).getName());
+        assertEquals("Alice", students.get(1).getName());
+
+        // Verify
+        verify(studentRepository, times(1)).findByAgeBetween(18, 25);
+    }
+
+    @Test
+    public void testGetStudentsByAgeRange_EmptyResult() {
+        // Arrange
+        when(studentRepository.findByAgeBetween(30, 40)).thenReturn(Arrays.asList());
+
+        // Act
+        List<Student> students = studentService.getStudentsByAgeRange(30, 40);
+
+        // Assert
+        assertTrue(students.isEmpty());
+
+        // Verify
+        verify(studentRepository, times(1)).findByAgeBetween(30, 40);
     }
 }

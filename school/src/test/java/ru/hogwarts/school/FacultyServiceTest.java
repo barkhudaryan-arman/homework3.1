@@ -9,6 +9,7 @@ import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.repository.FacultyRepository;
 import ru.hogwarts.school.service.FacultyService;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -80,13 +81,43 @@ class FacultyServiceTest {
     }
 
     @Test
-    void testGetFacultiesByColor() {
-        when(facultyRepository.findByColorIgnoreCase("Red")).thenReturn(List.of(faculty));
+    public void testGetFacultiesByNameOrColor() {
+        // Arrange
+        List<Faculty> mockFaculties = Arrays.asList(
+                new Faculty(1L, "Engineering", "Blue"),
+                new Faculty(2L, "Arts", "Red")
+        );
+        when(facultyRepository.findByNameIgnoreCaseOrColorIgnoreCase("engineering", "engineering"))
+                .thenReturn(mockFaculties);
 
-        List<Faculty> facultiesByColor = facultyService.getFacultiesByColor("Red");
+        // Act
+        List<Faculty> faculties = facultyService.getFacultiesByNameOrColor("engineering", "engineering");
 
-        assertEquals(1, facultiesByColor.size());
-        assertEquals(faculty.getName(), facultiesByColor.get(0).getName());
-        verify(facultyRepository, times(1)).findByColorIgnoreCase("Red");
+        // Assert
+        assertNotNull(faculties);
+        assertEquals(2, faculties.size());
+        assertEquals("Engineering", faculties.get(0).getName());
+        assertEquals("Arts", faculties.get(1).getName());
+
+        // Verify
+        verify(facultyRepository, times(1))
+                .findByNameIgnoreCaseOrColorIgnoreCase("engineering", "engineering");
+    }
+
+    @Test
+    public void testGetFacultiesByNameOrColor_EmptyResult() {
+        // Arrange
+        when(facultyRepository.findByNameIgnoreCaseOrColorIgnoreCase("unknown", "unknown"))
+                .thenReturn(Arrays.asList());
+
+        // Act
+        List<Faculty> faculties = facultyService.getFacultiesByNameOrColor("unknown", "unknown");
+
+        // Assert
+        assertTrue(faculties.isEmpty());
+
+        // Verify
+        verify(facultyRepository, times(1))
+                .findByNameIgnoreCaseOrColorIgnoreCase("unknown", "unknown");
     }
 }
